@@ -132,23 +132,23 @@ namespace Microsoft.AspNetCore.Mvc.ViewComponents
                 componentType.FullName));
         }
 
-        private async Task<IHtmlContent> InvokeCoreAsync(
-            ViewComponentDescriptor descriptor,
-            object arguments)
+        // Internal for testing
+        internal IDictionary<string, object> GetArgumentDictionary(ViewComponentDescriptor descriptor, object arguments)
         {
-            IDictionary<string, object> argumentDictionary;
-
             if (descriptor.Parameters.Count == 1 && descriptor.Parameters[0].ParameterType.IsAssignableFrom(arguments.GetType()))
             {
-                argumentDictionary = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                return new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
                 {
-                    { descriptor.Parameters[0].ParameterType.Name, arguments }
+                    { descriptor.Parameters[0].Name, arguments }
                 };
             }
-            else
-            {
-                argumentDictionary = PropertyHelper.ObjectToDictionary(arguments);
-            }
+
+            return PropertyHelper.ObjectToDictionary(arguments);
+        }
+
+        private async Task<IHtmlContent> InvokeCoreAsync(ViewComponentDescriptor descriptor, object arguments)
+        {
+            var argumentDictionary = GetArgumentDictionary(descriptor, arguments);
 
             var viewBuffer = new ViewBuffer(_viewBufferScope, descriptor.FullName, ViewBuffer.ViewComponentPageSize);
             using (var writer = new ViewBufferTextWriter(viewBuffer, _viewContext.Writer.Encoding))
