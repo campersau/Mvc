@@ -18,8 +18,8 @@ namespace Microsoft.AspNetCore.Mvc.Formatters.Json.Internal
     /// </summary>
     public class MvcJsonMvcOptionsSetup : IConfigureOptions<MvcOptions>
     {
-        private ILoggerFactory _loggerFactory;
-        private IOptions<MvcJsonOptions> _jsonOptions;
+        private readonly ILoggerFactory _loggerFactory;
+        private JsonSerializerSettings _jsonSerializerSettings;
         private ArrayPool<char> _charPool;
         private ObjectPoolProvider _objectPoolProvider;
 
@@ -40,34 +40,33 @@ namespace Microsoft.AspNetCore.Mvc.Formatters.Json.Internal
             {
                 throw new ArgumentNullException(nameof(loggerFactory));
             }
-            _loggerFactory = loggerFactory;
 
             if (jsonOptions == null)
             {
                 throw new ArgumentNullException(nameof(jsonOptions));
             }
-            _jsonOptions = jsonOptions;
 
+            _loggerFactory = loggerFactory;
+            _jsonSerializerSettings = jsonOptions.Value.SerializerSettings;
             _charPool = charPool;
             _objectPoolProvider = objectPoolProvider;
         }
 
         public void Configure(MvcOptions options)
         {
-            var serializerSettings = _jsonOptions.Value.SerializerSettings;
-            options.OutputFormatters.Add(new JsonOutputFormatter(serializerSettings, _charPool));
+            options.OutputFormatters.Add(new JsonOutputFormatter(_jsonSerializerSettings, _charPool));
 
             var jsonInputLogger = _loggerFactory.CreateLogger<JsonInputFormatter>();
             options.InputFormatters.Add(new JsonInputFormatter(
                 jsonInputLogger,
-                serializerSettings,
+                _jsonSerializerSettings,
                 _charPool,
                 _objectPoolProvider));
 
             var jsonInputPatchLogger = _loggerFactory.CreateLogger<JsonPatchInputFormatter>();
             options.InputFormatters.Add(new JsonPatchInputFormatter(
                 jsonInputPatchLogger,
-                serializerSettings,
+                _jsonSerializerSettings,
                 _charPool,
                 _objectPoolProvider));
 

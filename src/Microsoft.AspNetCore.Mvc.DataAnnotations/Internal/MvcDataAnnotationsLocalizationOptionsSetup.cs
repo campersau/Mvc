@@ -11,10 +11,7 @@ namespace Microsoft.AspNetCore.Mvc.DataAnnotations.Internal
     /// </summary>
     public class MvcDataAnnotationsLocalizationOptionsSetup : IConfigureOptions<MvcDataAnnotationsLocalizationOptions>
     {
-        /// <summary>
-        /// Adds a delegate to <see cref="MvcDataAnnotationsLocalizationOptions"/>.DataAnnotationLocalizerProvider
-        /// </summary>
-        /// <param name="options"></param>
+        /// <inheritdoc />
         public void Configure(MvcDataAnnotationsLocalizationOptions options)
         {
             if (options == null)

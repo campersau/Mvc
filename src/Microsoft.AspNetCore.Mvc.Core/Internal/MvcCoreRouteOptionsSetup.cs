@@ -18,6 +18,11 @@ namespace Microsoft.AspNetCore.Mvc.Internal
         /// <param name="options">The <see cref="RouteOptions"/>.</param>
         public void Configure(RouteOptions options)
         {
+            if (options == null)
+            {
+                throw new ArgumentNullException(nameof(options));
+            }
+
             options.ConstraintMap.Add("exists", typeof(KnownRouteValueConstraint));
         }
     }

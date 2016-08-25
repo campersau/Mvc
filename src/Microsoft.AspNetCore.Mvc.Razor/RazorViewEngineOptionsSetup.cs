@@ -10,38 +10,35 @@ using Microsoft.Extensions.Options;
 
 namespace Microsoft.AspNetCore.Mvc
 {
+    [Obsolete("This class will be replaced with one that implements IConfigureOptions.")]
     /// <summary>
     /// Sets up default options for <see cref="RazorViewEngineOptions"/>.
     /// </summary>
-    public class RazorViewEngineOptionsSetup : IConfigureOptions<RazorViewEngineOptions>
+    public class RazorViewEngineOptionsSetup : ConfigureOptions<RazorViewEngineOptions>
     {
-        private IHostingEnvironment _hostingEnvironment;
-
         /// <summary>
         /// Initializes a new instance of <see cref="RazorViewEngineOptions"/>.
         /// </summary>
         /// <param name="hostingEnvironment"><see cref="IHostingEnvironment"/> for the application.</param>
-        public RazorViewEngineOptionsSetup(IHostingEnvironment hostingEnvironment)
+        public RazorViewEngineOptionsSetup(
+            IHostingEnvironment hostingEnvironment)
+            : base(options => ConfigureRazor(options, hostingEnvironment))
         {
-            if (hostingEnvironment == null)
-            {
-                throw new ArgumentNullException(nameof(hostingEnvironment));
-            }
-
-            _hostingEnvironment = hostingEnvironment;
         }
 
-        public void Configure(RazorViewEngineOptions razorOptions)
+        private static void ConfigureRazor(
+            RazorViewEngineOptions razorOptions,
+            IHostingEnvironment hostingEnvironment)
         {
-            if (_hostingEnvironment.ContentRootFileProvider != null)
+            if (hostingEnvironment.ContentRootFileProvider != null)
             {
-                razorOptions.FileProviders.Add(_hostingEnvironment.ContentRootFileProvider);
+                razorOptions.FileProviders.Add(hostingEnvironment.ContentRootFileProvider);
             }
 
             var compilationOptions = razorOptions.CompilationOptions;
             string configurationSymbol;
 
-            if (_hostingEnvironment.IsDevelopment())
+            if (hostingEnvironment.IsDevelopment())
             {
                 configurationSymbol = "DEBUG";
                 razorOptions.CompilationOptions = compilationOptions.WithOptimizationLevel(OptimizationLevel.Debug);
