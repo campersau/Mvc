@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -74,18 +75,6 @@ namespace Microsoft.AspNetCore.Mvc.ViewFeatures.Internal
                 throw new InvalidOperationException(Resources.TemplateHelpers_TemplateLimitations);
             }
 
-            Func<object, object> modelAccessor = (container) =>
-            {
-                try
-                {
-                    return CachedExpressionCompiler.Process(expression)((TModel)container);
-                }
-                catch (NullReferenceException)
-                {
-                    return null;
-                }
-            };
-
             ModelMetadata metadata;
             if (propertyName == null)
             {
@@ -103,6 +92,34 @@ namespace Microsoft.AspNetCore.Mvc.ViewFeatures.Internal
                 //    m => m.Widgets[0].Size (expression ending with property-access)
                 metadata = metadataProvider.GetMetadataForType(containerType).Properties[propertyName];
             }
+
+            Func<object, object> modelAccessor = (container) =>
+            {
+                try
+                {
+                    object result = CachedExpressionCompiler.Process(expression)((TModel)container);
+                    if (expression.ReturnType.GetTypeInfo().IsEnum)
+                    {
+                        var enumValue = metadata.EnumNamesAndValues[result.ToString()];
+                        foreach (var kvp in metadata.EnumGroupedDisplayNamesAndValues)
+                        {
+                            if (kvp.Value == enumValue)
+                            {
+                                if (!string.IsNullOrEmpty(kvp.Key.Name))
+                                {
+                                    result = kvp.Key.Name;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    return result;
+                }
+                catch (NullReferenceException)
+                {
+                    return null;
+                }
+            };
 
             return viewData.ModelExplorer.GetExplorerForExpression(metadata, modelAccessor);
         }

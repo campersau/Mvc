@@ -4,10 +4,12 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using Microsoft.AspNetCore.Testing;
 using Microsoft.Extensions.Localization;
 using Moq;
 using Xunit;
@@ -770,6 +772,93 @@ namespace Microsoft.AspNetCore.Mvc.DataAnnotations.Internal
                 .ThenBy(item => item.Key.Name, StringComparer.Ordinal));
         }
 
+        private DataAnnotationsMetadataProvider CreateLocalizingProvider()
+        {
+            var stringLocalizer = new Mock<IStringLocalizer>(MockBehavior.Strict);
+            stringLocalizer
+                .Setup(loc => loc["LOC_Two"])
+                .Returns<string>((k => new LocalizedString(k, $"{k} {CultureInfo.CurrentCulture}")));
+
+            var stringLocalizerFactory = new Mock<IStringLocalizerFactory>(MockBehavior.Strict);
+            stringLocalizerFactory
+                .Setup(factory => factory.Create(typeof(EnumWithLocalizedDisplayNames)))
+                .Returns(stringLocalizer.Object);
+
+            return new DataAnnotationsMetadataProvider(stringLocalizerFactory: stringLocalizerFactory.Object);
+        }
+
+        [Fact]
+        public void CreateDisplayMetadata_EnumGroupedDisplayNamesAndValues_IStringLocalizer()
+        {
+            // Arrange
+            var provider = CreateLocalizingProvider();
+
+            var key = ModelMetadataIdentity.ForType(typeof(EnumWithLocalizedDisplayNames));
+            var attributes = new object[0];
+
+            // Act
+            var context = new DisplayMetadataProviderContext(key, new ModelAttributes(attributes));
+            provider.CreateDisplayMetadata(context);
+
+            string frenchEnumDisplay;
+            using (new CultureReplacer("fr-FR", "fr-FR"))
+            {
+                frenchEnumDisplay = context.DisplayMetadata.EnumGroupedDisplayNamesAndValues
+                    .Where(kvp => kvp.Value == "2")
+                    .First().Key.Name;
+            }
+
+            string englishEnumDisplay;
+            using (new CultureReplacer("en-US", "en-US"))
+            {
+                englishEnumDisplay = context.DisplayMetadata.EnumGroupedDisplayNamesAndValues
+                    .Where(kvp => kvp.Value == "2")
+                    .First().Key.Name;
+            }
+
+            // Assert
+            // OrderBy is used because the order of the results may very depending on the platform / client.
+            Assert.NotEqual(frenchEnumDisplay, englishEnumDisplay);
+            Assert.Equal("LOC_Two fr-FR", frenchEnumDisplay);
+            Assert.Equal("LOC_Two en-US", englishEnumDisplay);
+        }
+
+        [Fact]
+        public void CreateDisplayMetadata_EnumGroupedDisplayNamesAndValues_ResourceTypeLocalizes()
+        {
+            // Arrange
+            var provider = CreateLocalizingProvider();
+
+            var key = ModelMetadataIdentity.ForType(typeof(EnumWithLocalizedDisplayNames));
+            var attributes = new object[0];
+
+            // Act
+            var context = new DisplayMetadataProviderContext(key, new ModelAttributes(attributes));
+            provider.CreateDisplayMetadata(context);
+
+            string frenchEnumDisplay;
+            using (new CultureReplacer("fr-FR", "fr-FR"))
+            {
+                frenchEnumDisplay = context.DisplayMetadata.EnumGroupedDisplayNamesAndValues
+                    .Where(kvp => kvp.Value == "3")
+                    .First().Key.Name;
+            }
+
+            string englishEnumDisplay;
+            using (new CultureReplacer("en-US", "en-US"))
+            {
+                englishEnumDisplay = context.DisplayMetadata.EnumGroupedDisplayNamesAndValues
+                    .Where(kvp => kvp.Value == "3")
+                    .First().Key.Name;
+            }
+
+            // Assert
+            // OrderBy is used because the order of the results may very depending on the platform / client.
+            Assert.NotEqual(frenchEnumDisplay, englishEnumDisplay);
+            Assert.Equal("Type Three fr-FR", frenchEnumDisplay);
+            Assert.Equal("Type Three en-US", englishEnumDisplay);
+        }
+
         [Fact]
         public void CreateValidationMetadata_RequiredAttribute_SetsIsRequiredToTrue()
         {
@@ -919,6 +1008,16 @@ namespace Microsoft.AspNetCore.Mvc.DataAnnotations.Internal
 
         private enum EmptyEnum
         {
+        }
+
+        private enum EnumWithLocalizedDisplayNames
+        {
+            [Display(Name = "One_Disp")]
+            One = 1,
+            [Display(Name = "LOC_Two")]
+            Two = 2,
+            [Display(Name = "Type_Three", ResourceType = typeof(TestResources))]
+            Three = 3
         }
 
         private enum EnumWithDisplayNames

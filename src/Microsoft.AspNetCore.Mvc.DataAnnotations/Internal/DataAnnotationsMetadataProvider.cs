@@ -153,22 +153,23 @@ namespace Microsoft.AspNetCore.Mvc.DataAnnotations.Internal
                 // Dictionary does not guarantee order will be preserved.
                 var groupedDisplayNamesAndValues = new List<KeyValuePair<EnumGroupAndName, string>>();
                 var namesAndValues = new Dictionary<string, string>();
-                var enumLocalizer = _stringLocalizerFactory.Create(underlyingType);
+                IStringLocalizer enumLocalizer = _stringLocalizerFactory?.Create(underlyingType);
                 foreach (var name in Enum.GetNames(underlyingType))
                 {
                     var field = underlyingType.GetField(name);
-                    var displayName = GetDisplayName(enumLocalizer, field);
                     var groupName = GetDisplayGroup(field);
                     var value = ((Enum)field.GetValue(obj: null)).ToString("d");
 
                     groupedDisplayNamesAndValues.Add(new KeyValuePair<EnumGroupAndName, string>(
-                        new EnumGroupAndName(groupName, displayName),
+                        new EnumGroupAndName(groupName, () => GetDisplayName(enumLocalizer, field)),
                         value));
                     namesAndValues.Add(name, value);
                 }
 
                 displayMetadata.EnumGroupedDisplayNamesAndValues = groupedDisplayNamesAndValues;
                 displayMetadata.EnumNamesAndValues = namesAndValues;
+
+                //displayMetadata.EnumGroupedDisplayNamesAndValueFuncs = groupedDisplayNamesAndValueFuncs;
             }
 
             // HasNonDefaultEditFormat

@@ -10,6 +10,8 @@ namespace Microsoft.AspNetCore.Mvc.ModelBinding
     /// </summary>
     public struct EnumGroupAndName
     {
+        private Func<string> _nameFunc;
+
         /// <summary>
         /// Initializes a new instance of the EnumGroupAndName structure.
         /// </summary>
@@ -28,7 +30,23 @@ namespace Microsoft.AspNetCore.Mvc.ModelBinding
             }
 
             Group = group;
-            Name = name;
+            _nameFunc = () => name;
+        }
+
+        public EnumGroupAndName(string group, Func<string> name)
+        {
+            if (group == null)
+            {
+                throw new ArgumentNullException(nameof(group));
+            }
+
+            if (name == null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
+
+            Group = group;
+            _nameFunc = name;
         }
 
         /// <summary>
@@ -39,6 +57,12 @@ namespace Microsoft.AspNetCore.Mvc.ModelBinding
         /// <summary>
         /// Gets the name.
         /// </summary>
-        public string Name { get; }
+        public string Name
+        {
+            get
+            {
+                return _nameFunc();
+            }
+        }
     }
 }
