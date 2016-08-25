@@ -817,7 +817,6 @@ namespace Microsoft.AspNetCore.Mvc.DataAnnotations.Internal
             }
 
             // Assert
-            // OrderBy is used because the order of the results may very depending on the platform / client.
             Assert.NotEqual(frenchEnumDisplay, englishEnumDisplay);
             Assert.Equal("LOC_Two fr-FR", frenchEnumDisplay);
             Assert.Equal("LOC_Two en-US", englishEnumDisplay);
@@ -853,7 +852,6 @@ namespace Microsoft.AspNetCore.Mvc.DataAnnotations.Internal
             }
 
             // Assert
-            // OrderBy is used because the order of the results may very depending on the platform / client.
             Assert.NotEqual(frenchEnumDisplay, englishEnumDisplay);
             Assert.Equal("Type Three fr-FR", frenchEnumDisplay);
             Assert.Equal("Type Three en-US", englishEnumDisplay);

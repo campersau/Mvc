@@ -33,6 +33,11 @@ namespace Microsoft.AspNetCore.Mvc.ModelBinding
             _nameFunc = () => name;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the EnumGroupAndName structure.
+        /// </summary>
+        /// <param name="group">The group name.</param>
+        /// <param name="name">A function which returns the name. (Necessary for proper localization.)</param>
         public EnumGroupAndName(string group, Func<string> name)
         {
             if (group == null)

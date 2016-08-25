@@ -168,8 +168,6 @@ namespace Microsoft.AspNetCore.Mvc.DataAnnotations.Internal
 
                 displayMetadata.EnumGroupedDisplayNamesAndValues = groupedDisplayNamesAndValues;
                 displayMetadata.EnumNamesAndValues = namesAndValues;
-
-                //displayMetadata.EnumGroupedDisplayNamesAndValueFuncs = groupedDisplayNamesAndValueFuncs;
             }
 
             // HasNonDefaultEditFormat
